@@ -1,16 +1,17 @@
-function [p95_4, p68_2, calprob, medage] = biocal(Adet, sigdet, calcurve, yeartype, sar, bd, thick, brok, abu, res)
-%[p95_4, p68_2, calprob, medage] = biocal(labdet, laberr, calcurve, yeartype, sar, bd, thick, brok, abu, res)
+function [p95_4, p68_2, calprob, medage] = biocal(Adet, sigdet, calcurve, yeartype, sar, bd, brok, abu, res)
+%[p95_4, p68_2, calprob, medage] = biocal(Adet, sigdet, calcurve, yeartype, sar, bd, brok, abu, res)
 %
 % Calibrate a 14C determination using sediment bioturbation priors.
 %
-% B.C. Lougheed, September 2020
+% version 0.9
+% B.C. Lougheed, June 2021
 % bryan.lougheed@geo.uu.se
 %
 % Input parameters
 % ========================
-% labdet:   laboratory 14C determination in 14C yr BP
+% Adet:     laboratory 14C determination in 14C yr BP
 %
-% laberr:   laboratory 14C measurement uncertainty in 14C yr
+% sigdet:   laboratory 14C measurement uncertainty in 14C yr
 %
 % calcurve: String specifying calibration curve to use, select from
 %           the following (not case sensitive):
@@ -24,8 +25,6 @@ function [p95_4, p68_2, calprob, medage] = biocal(Adet, sigdet, calcurve, yearty
 % sar:      Sediment accumulation rate (SAR) prior in cm/ka
 %
 % bd:       Bioturbation depth prior in cm.
-%
-% thick:    Sediment slice thickness in cm.
 %
 % brok:     Estimation of fraction of foraminifera population that 
 %           that is fragmented, and therefore not picked.
@@ -268,18 +267,18 @@ pmat = pmat./sum(pmat,2); % normalise again
 p14cTt = sum(   1./(curveerr.*sqrt(2*pi)) .* exp(  -(curvef14-curvef14').^2  ./  (2.*curveerr.^2)  ) , 2 )';
 
 % Equation 7, hdet(t). Once again vectorised, each row of hdet corresponds to each instance of t.
-p14cTt = pmat .* p14cTt; % First part of Eq 7. (except abundance already taken care of above)
+p14cTt = pmat .* p14cTt; % First part of Eq 7. (except abundance already taken care of above in line 263)
 p14cTt = p14cTt./sum(p14cTt,2); % normalise all rows. Each row is each instance t
 hdet = sum( curvef14 .* p14cTt , 2 ); % the final part of Eq. 7
 
 % probability for each sliding window t based on the closeness of its hdet(t) 
 % to labdet as calculated using normal pdf of Adet and sigdet
 Adet = exp(Adet/-8033); % first convert Adet to F14C
-sigdet = Adet*sigdet/8033;
+sigdet = Adet*sigdet/8033; % also convert to F14C
 phdet = 1/(sigdet*sqrt(2*pi)) * exp( -(hdet-Adet).^2 / (2*sigdet^2) );
 
 % Construct final cal age probability distribution
-pmat = pmat .* phdet; % Pcal(T|t)
+pmat = pmat .* phdet; % Mcal(T)
 pcal = sum(pmat,1); % Pcal(T)
 pcal = pcal/sum(pcal); % normalise
 
