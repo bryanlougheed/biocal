@@ -1,4 +1,4 @@
-function [p95_4, p68_2, calprob, medage] = biocal(Fdet, sigdet, calcurve, yeartype, sar, bd, thick, brok, abu, res)
+function [p95_4, p68_2, calprob, medage] = biocal(Adet, sigdet, calcurve, yeartype, sar, bd, thick, brok, abu, res)
 %[p95_4, p68_2, calprob, medage] = biocal(labdet, laberr, calcurve, yeartype, sar, bd, thick, brok, abu, res)
 %
 % Calibrate a 14C determination using sediment bioturbation priors.
@@ -199,49 +199,7 @@ curvecal = min(curvecal):calres:max(curvecal);
 curvef14 = exp(curve14c/-8033);	% Now convert to F14C activity
 curveerr = curvef14.*curveerr/8033; % Now convert to F14C activity error
 
-% make prior distribution (ppri) of relative age for the sample
-rnga = 0:calres:round((bd*4/sar)); % discrete relative age range of prior (4 bioturbation depths)
-ppri = exp(-(rnga.*sar)./bd); % Eq. 1 in manuscript
-rk = ( -bd*log(brok) ) / sar; % Eq. 3 in manuscript
-ppri = ppri(rnga<rk); % trim prior distribution to whole microfossils only
-ppri = ppri-(min(ppri)); % floor the prior distribution to zero
-ppri = ppri/sum(ppri); % normalise prior dist such that it sums to 1
-
-% start (ts) and end (te) of sliding windows, based on C14 errors and ppri length
-% get estimate (in the future, when computers get faster and have more memory, we can just do
-% the entire curve and not need to trim here)
-[~,ts] = min(abs( curve14c - (Fdet-(3*sigdet)-numel(ppri)*0.75) ));
-ts = ts(1);
-[~,te] = min(abs( curve14c - (Fdet+(3*sigdet)+numel(ppri)*0.75) ));
-te = te(end);
-
-% initiate prob matrix pmat for all windows t, with space for ppri tail at final t
-pmat = zeros(numel(ts:te),numel(ts:te)+numel(ppri)-1); %
-
-% trim cal curve to match prob matrix
-ind = find(curvecal >= curvecal(ts) & curvecal <= curvecal(ts)+size(pmat,2)-1);
-curvef14 = curvef14(ind);
-%curve14c = curve14c(ind); % not used
-curveerr = curveerr(ind);
-curvecal = curvecal(ind);
-
-% retrim pmat to calcurve (i.e. in case it exceeds end of cal curve)
-pmat = pmat(:,1:numel(curvecal));
-
-% populate pmat with ppri. each row (t) of pmat contains ppri placed at a new sliding window starting at t
-% where ppri(1) is placed at t
-S = size(pmat,2);
-N = numel(ppri);
-for t = 1:size(pmat,1) % could perhaps be vectorised, but super fast as it is
-	if S-t+1 >= N
-		pmat(t,t:t+N-1) = ppri;
-	else % nearing end of calcurve (and thus pmat)
-		pmat(t,t:end) = ppri(1:S-t+1);		
-	end
-end
-pmat = pmat./sum(pmat,2); % normalise all rows of pmat
-
-% apply temporal abundance to all columns of pmat
+% collect abundance information
 if isempty(abu)
 	abus = 1;
 elseif size(abu,2) == 2
@@ -259,27 +217,71 @@ else
 	error('Abundance not entered correctly')
 end
 
-% calculate p14c(T|t) (Eq. 6). Fully vectorised here, each row corresponds to instance of t
+% make prior distribution (ppri) of relative age for the sample
+rnga = 0:calres:round((bd*5/sar)); % discrete relative age range of prior (5 bioturbation depths)
+ppri = exp(-(rnga.*sar)./bd); % Eq. 1 in manuscript
+rk = ( -bd*log(brok) ) / sar; % Eq. 3 in manuscript
+ppri = ppri(rnga<rk); % trim prior distribution to whole microfossils only
+ppri = ppri/sum(ppri); % normalise prior dist such that it sums to 1
+
+% start (ts) and end (te) of sliding windows, based on C14 errors and ppri length
+% get estimate (in the future, when computers get faster and have more memory, we can just do
+% the entire curve and not need to trim here)
+[~,ts] = min(abs( curve14c - (Adet-(3*sigdet)-numel(ppri)*0.75) ));
+ts = ts(1);
+[~,te] = min(abs( curve14c - (Adet+(3*sigdet)+numel(ppri)*0.75) ));
+te = te(end);
+
+% initiate prob matrix pmat for all windows t, with space for ppri tail at final t
+pmat = zeros(numel(ts:te),numel(ts:te)+numel(ppri)-1); %
+
+% trim cal curve to match prob matrix
+ind = find(curvecal >= curvecal(ts) & curvecal <= curvecal(ts)+size(pmat,2)-1);
+curvef14 = curvef14(ind);
+%curve14c = curve14c(ind); % not used
+curveerr = curveerr(ind);
+curvecal = curvecal(ind);
+% also trim abus
+if ~isempty(abu)
+	abus = abus(ind);
+end
+
+% retrim pmat to calcurve (i.e. in case it exceeds end of cal curve)
+pmat = pmat(:,1:numel(curvecal));
+
+% populate pmat with ppri. each row (t) of pmat contains ppri placed at a new sliding window starting at t
+% where ppri(1) is placed at t
+S = size(pmat,2);
+N = numel(ppri);
+for t = 1:size(pmat,1) % could perhaps be vectorised, but super fast as it is
+	if S-t+1 >= N % enough space for the entire ppri
+		pmat(t,t:t+N-1) = ppri;
+	else % nearing end of calcurve (and thus pmat)
+		pmat(t,t:end) = ppri(1:S-t+1);		
+	end
+end
+pmat = pmat./sum(pmat,2); % normalise all rows of pmat
+pmat = pmat.*abus;        % multiply by abundance probability
+pmat = pmat./sum(pmat,2); % normalise again
+
+% calculate p14c(T|t) (Eq. 6). Fully vectorised here, each row corresponds to each instance of t
 p14cTt = sum(   1./(curveerr.*sqrt(2*pi)) .* exp(  -(curvef14-curvef14').^2  ./  (2.*curveerr.^2)  ) , 2 )';
 
-% Equation 7, hdet(t). Once again vectorised, each row of hdet corresponds to an instance of t.
-p14cTt = pmat .* p14cTt .* abus; % First part of Eq 7.
+% Equation 7, hdet(t). Once again vectorised, each row of hdet corresponds to each instance of t.
+p14cTt = pmat .* p14cTt; % First part of Eq 7. (except abundance already taken care of above)
 p14cTt = p14cTt./sum(p14cTt,2); % normalise all rows. Each row is each instance t
 hdet = sum( curvef14 .* p14cTt , 2 ); % the final part of Eq. 7
 
 % probability for each sliding window t based on the closeness of its hdet(t) 
-% to labdet as calculated using normal pdf of Fdet and sigdet
-Fdet = exp(Fdet/-8033); % first convert Fdet to f14c
-sigdet = Fdet*sigdet/8033;
-phdet = 1/(sigdet*sqrt(2*pi)) * exp( -(hdet-Fdet).^2 / (2*sigdet^2) );
+% to labdet as calculated using normal pdf of Adet and sigdet
+Adet = exp(Adet/-8033); % first convert Adet to F14C
+sigdet = Adet*sigdet/8033;
+phdet = 1/(sigdet*sqrt(2*pi)) * exp( -(hdet-Adet).^2 / (2*sigdet^2) );
 
 % Construct final cal age probability distribution
-pmat = pmat .* phdet;
-pcal = sum(pmat,1);
+pmat = pmat .* phdet; % Pcal(T|t)
+pcal = sum(pmat,1); % Pcal(T)
 pcal = pcal/sum(pcal); % normalise
-if pcal(1) > 10^-10 || pcal(end) > 10^-10
-	warning('Calibration may exceed limits of calibration curve')
-end
 
 % output calprob to user
 calprob = NaN(numel(curvecal),2);
@@ -290,63 +292,10 @@ calprob(:,2) = pcal;
 [~, median_ind] = min(abs(cumsum(calprob(:,2))-0.5));
 medage = round(mean(calprob(median_ind,1))); % in case more than one
 
-% figure(333)
-% plot(calprob(:,1)/1000,calprob(:,2))
-% ylabel('p(cal)')
-% xlabel('Age (ka)')
-% hold on
-
 % find 68.2% and 95.4% cal age credible intervals using highest posterior density (HPD)
-% script below is copied from matcal: https://zenodo.org/record/3981591
-hpd = calprob(:,1:2);
-hpd = sortrows(hpd, 2);
-hpd(:,3) = cumsum(hpd(:,2));
-% 68.2%
-hpd68_2 = hpd(hpd(:,3) >= 1-erf(1/sqrt(2)), :);
-hpd68_2 = sortrows(hpd68_2,1);
-ind1 = find(diff(hpd68_2(:,1)) > 1);
-if isempty(ind1)
-	p68_2(1,1) = hpd68_2(end,1);
-	p68_2(1,2) = hpd68_2(1,1);
-	p68_2(1,3) = sum(hpd68_2(1:end,2));
-else
-	indy1 = NaN(length(ind1)*2,1);
-	for i = 1:length(ind1)
-		indy1(i*2-1,1) = ind1(i);
-		indy1(i*2,1) = ind1(i)+1;
-	end
-	indy1 = [ 1 ; indy1; length(hpd68_2(:,1)) ];
-	p68_2 = NaN(length(2:2:length(indy1)),3);
-	for i = 2:2:length(indy1)
-		p68_2(i/2,1) = hpd68_2(indy1(i),1);
-		p68_2(i/2,2) = hpd68_2(indy1(i-1),1);
-		p68_2(i/2,3) = sum(hpd68_2(indy1(i-1):indy1(i),2));
-	end
-	p68_2 = flipud(p68_2);
-end
-% 95.4%
-hpd95_4 = hpd(hpd(:,3) >= 1-erf(2/sqrt(2)), :);
-hpd95_4 = sortrows(hpd95_4,1);
-ind2 = find(diff(hpd95_4(:,1)) > 1);
-if isempty(ind2)
-	p95_4(1,1) = hpd95_4(end,1);
-	p95_4(1,2) = hpd95_4(1,1);
-	p95_4(1,3) = sum(hpd95_4(1:end,2));
-else
-	indy2 = NaN(length(ind2)*2,1);
-	for i = 1:length(ind2)
-		indy2(i*2-1,1) = ind2(i);
-		indy2(i*2,1) = ind2(i)+1;
-	end
-	indy2 = [ 1 ; indy2; length(hpd95_4(:,1)) ];
-	p95_4 = NaN(length(2:2:length(indy2)),3);
-	for i = 2:2:length(indy2)
-		p95_4(i/2,1) = hpd95_4(indy2(i),1);
-		p95_4(i/2,2) = hpd95_4(indy2(i-1),1);
-		p95_4(i/2,3) = sum(hpd95_4(indy2(i-1):indy2(i),2));
-	end
-	p95_4 = flipud(p95_4);
-end
+% done by hpdcalc function in private folder
+p68_2 = hpdcalc(calprob(:,1), calprob(:,2), 1, erf(1/sqrt(2)) );
+p95_4 = hpdcalc(calprob(:,1), calprob(:,2), 1, erf(2/sqrt(2)) );
 
 % convert output to BCE/CE if requested
 if strcmpi(yeartype,'BCE/CE') == 1
@@ -356,9 +305,14 @@ if strcmpi(yeartype,'BCE/CE') == 1
 	p68_2(:,1:2) = (p68_2(:,1:2)-1950) * -1;
 end
 
+% figure(333)
+% plot(calprob(:,1)/1000,calprob(:,2))
+% ylabel('p(cal)')
+% xlabel('Age (ka)')
+% hold on
+
+end % end main function
 
 
-
-end % end function
 
 
