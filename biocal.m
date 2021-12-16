@@ -3,7 +3,7 @@ function [p95_4, p68_2, calprob, medage] = biocal(Adet, sigdet, calcurve, yearty
 %
 % Calibrate a 14C determination using sediment bioturbation priors.
 %
-% version 0.9
+% version 1.0
 % B.C. Lougheed, June 2021
 % bryan.lougheed@geo.uu.se
 %
