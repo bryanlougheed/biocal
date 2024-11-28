@@ -2,6 +2,9 @@ import numpy as np
 import scipy.special as sp
 import numexpr as ne
 
+# there is a working example of the function call commented out
+# in the bottom of this .py file
+
 def biocal(Adet, sigdet, calcurve, yeartype, sar, bd, brok=0, abu=[], res=[]):
     """
     p95_4, p95, p68_2, calprob, medage = biocal(Adet, sigdet, calcurve, yeartype, sar, bd, brok=0, abu=[], res=[])
@@ -393,25 +396,24 @@ def biocal(Adet, sigdet, calcurve, yeartype, sar, bd, brok=0, abu=[], res=[]):
 
     return p95_4, p95, p68_2, calprob, medage
 
-# Test Example
+# # Working Example
+# Adet = 12500
+# sigdet= 40
+# calcurve = 'Marine20'
+# yeartype = 'Cal BP'
+# sar = 5
+# bd = 8
+# brok = 0.1
+# abu = []
+# res = [650, 40]
 
-Adet = 12500
-sigdet= 40
-calcurve = 'Marine20'
-yeartype = 'Cal BP'
-sar = 5
-bd = 8
-brok = 0.1
-abu = []
-res = [650, 40]
+# import time as time
+# tstart = time.time()
+# p95_4, p95, p68_2, calprob, medage = biocal(Adet, sigdet, calcurve, yeartype, sar, bd, brok, abu, res)
+# print(str(round(time.time()-tstart,2))+' seconds')
 
-import time as time
-tstart = time.time()
-p95_4, p95, p68_2, calprob, medage = biocal(Adet, sigdet, calcurve, yeartype, sar, bd, brok, abu, res)
-print(str(round(time.time()-tstart,2))+' seconds')
-
-import matplotlib.pyplot as plt
-plt.plot(calprob[:,0],calprob[:,1])
-plt.xlabel('Cal yr BP')
-plt.ylabel('Probability')
-plt.show()
+# import matplotlib.pyplot as plt
+# plt.plot(calprob[:,0],calprob[:,1])
+# plt.xlabel('Cal yr BP')
+# plt.ylabel('Probability')
+# plt.show()
