@@ -118,6 +118,7 @@ def biocal(Adet, sigdet, calcurve, yeartype, sar, bd, brok=0, abu=[], res=[]):
     python 3.12.4, numpy 1.26.4
     """
 
+    # convert to np.array if not already the case
     Adet = np.array(Adet)
     sigdet = np.array(sigdet)
     sar = np.array(sar)
@@ -186,7 +187,7 @@ def biocal(Adet, sigdet, calcurve, yeartype, sar, bd, brok=0, abu=[], res=[]):
         raise ValueError('Calibration curve '+calcurve+' unknown. Please specify a valid calibration curve (see help for options)')
 
     # Process some of the user inputs
-    sar = sar / 1000  # sar from cm/ka to cm/a
+    sar = np.copy(sar) / 1000  # sar from cm/ka to cm/a
 
     # Load cal curve data into workspace
     try:
@@ -204,18 +205,19 @@ def biocal(Adet, sigdet, calcurve, yeartype, sar, bd, brok=0, abu=[], res=[]):
         curve14c = curve14c + res[0]
         curveerr = np.sqrt(curveerr**2 + res[1]**2)
     elif res.shape[1] == 3:  # temporally dynamic reservoir effect
+        res = np.copy(res)
         try:
             if yeartype.lower() == 'bce/ce':
-                res[:, 0] = (1950 - res[:, 0])
+                res[:,0] = (1950 - res[:,0])
             res = np.sort(res, axis=0)
-            reseff = np.interp(curvecal, res[:, 0], res[:, 1])
-            reseff[curvecal < res[0, 0]] = res[0, 1]  # extrapolate using constant value
-            reseff[curvecal > res[-1, 0]] = res[-1, 1]  # extrapolate using constant value
+            reseff = np.interp(curvecal, res[:,0], res[:,1])
+            reseff[curvecal < res[0,0]] = res[0,1]  # extrapolate using constant value
+            reseff[curvecal > res[-1,0]] = res[-1,1]  # extrapolate using constant value
             curve14c = curve14c + reseff
-            reserr = np.interp(curvecal, res[:, 0], res[:, 2])
-            reserr[curvecal < res[0, 0]] = res[0, 2]  # extrapolate using constant value
-            reserr[curvecal > res[-1, 0]] = res[-1, 2]  # extrapolate using constant value
-            curveerr = np.sqrt(curveerr ** 2 + reserr ** 2)
+            reserr = np.interp(curvecal, res[:,0], res[:,2])
+            reserr[curvecal < res[0,0]] = res[0,2]  # extrapolate using constant value
+            reserr[curvecal > res[-1,0]] = res[-1,2]  # extrapolate using constant value
+            curveerr = np.sqrt(curveerr**2 + reserr**2)
         except:
             raise ValueError('Reservoir effect not entered correctly')
     else:
@@ -236,6 +238,7 @@ def biocal(Adet, sigdet, calcurve, yeartype, sar, bd, brok=0, abu=[], res=[]):
     elif abu.shape[1] == 2:
         try:
             if yeartype.lower() == 'bce/ce':
+                abu = np.copy(abu)
                 abu[:,0] = (1950 - abu[:,0])
             abus = np.interp(curvecal, abu[:,0], abu[:,1])
             abus[curvecal < abu[0,0]] = abu[0,1]  # extrapolate using constant value
@@ -264,8 +267,8 @@ def biocal(Adet, sigdet, calcurve, yeartype, sar, bd, brok=0, abu=[], res=[]):
         te = te[-1]
 
     # now also convert Adet and sigdet to F14C activity
-    Adet = np.exp(Adet / -8033)
-    sigdet = Adet * sigdet / 8033
+    Adet = np.exp(np.copy(Adet) / -8033) # copy so as not to affect the user's workspace
+    sigdet = Adet * np.copy(sigdet) / 8033
 
     # initiate prob matrix pmat for all windows t, with space for ppri tail at final t
     pmat = np.zeros((te - ts + 1, te-ts+ppri.size))  #
