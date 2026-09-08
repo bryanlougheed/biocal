@@ -8,7 +8,7 @@ See published paper (open-access):
 B.C. Lougheed, 2022. "Using sedimentological priors to improve 14C calibration of bioturbated sediment archives." _Radiocarbon_, vol 64(1), pp 135-151. https://doi.org/10.1017/RDC.2021.116 
 
 ## Matlab and Python versions
-The Python version is the version that is currently receiving active updates and has been heavily optimised using machine code. The Matlab version is no longer updated but still included as `biocal_matlab.zip` for legacy purposes. Note that because the Matlab version has not been similarly optimised, it will be significantly slower and use many more GB of RAM. I no longer have a Matlab license so you are on your own if you run into problems.
+The Python version is the version that is currently receiving active updates and has been heavily optimised using machine code. The Matlab version is no longer updated but still included as `biocal_matlab.zip` for legacy purposes. Note that because the Matlab version has not been similarly optimised, it will be significantly slower and use many more GB of RAM. I no longer have a Matlab licence so you are on your own if you run into problems.
 
 ## Install as a Python package
 Install (or upgrade) the package in your python environment using the `pip` terminal command (you may need to [install](https://github.com/git-guides/install-git) `git` first):
