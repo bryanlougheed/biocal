@@ -15,7 +15,7 @@ Install (or upgrade) the package in your python environment using the `pip` term
 
 `pip install git+https://github.com/bryanlougheed/biocal.git`
 
-If the install has been successful then you should be able to import the function from the package:
+If the install has been successful then you should be able to import, in your python environment, the function from the package:
 
 `from biocal import biocal`
 
