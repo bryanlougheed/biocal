@@ -1,6 +1,7 @@
 import numpy as np
 from math import erf
 from numba import jit, prange
+import os
 
 ### helper functions
 
@@ -310,8 +311,9 @@ def biocal(Adet, sigdet, calcurve, yeartype, sar, bd, brok=0, abu=[], res=[]):
     sar = np.copy(sar) / 1000  # sar from cm/ka to cm/a
 
     # Load cal curve data into workspace
+
     try:
-        contents = np.loadtxt('calcurves/' + calcurve + '.14c', delimiter=',', skiprows=headerlines)
+        contents = np.loadtxt(os.path.dirname(os.path.abspath(__file__))+'/calcurves/' + calcurve + '.14c', delimiter=',', skiprows=headerlines)
     except OSError:
         raise FileNotFoundError('Could not find ' + calcurve + '.14c. Typo?')
     curvecal = np.flipud(contents[:, 0])
