@@ -15,13 +15,14 @@ Install (or upgrade) the package in your python environment using the `pip` term
 
 `pip install git+https://github.com/bryanlougheed/biocal.git`
 
-If the install has been successful then you should be able to import the package in python in the usual way, e.g.:
+If the install has been successful then you should be able to import the function from the package:
 
 `import biocal`
+
+
+## Tutorial
+There is a functional example in the jupyter notebook `biocal_tutorial.ipynb`
 
 ## Licence
 Please consult the licence file in the repo.
 
-## Tutorial
-
-There is a functional example in the jupyter notebook `biocal_tutorial.ipynb`
