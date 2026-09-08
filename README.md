@@ -3,7 +3,7 @@
 ## Short description
 A function for creating an accurate credible calibrated age distribution for radiocarbon-dated multi-specimen samples sourced from bioturbated sediment samples such as deep-sea sediment cores. Priors relating to sediment accumulation rate (SAR), bioturbation depth (BD), fraction broken microfossils and temporal changes in species abundance can be included. Traditional priors such as reservoir effect can also be included.
 
-See published paper: 
+See published paper (open-access): 
 
 B.C. Lougheed, 2022. "Using sedimentological priors to improve 14C calibration of bioturbated sediment archives." _Radiocarbon_, vol 64(1), pp 135-151. https://doi.org/10.1017/RDC.2021.116 
 
