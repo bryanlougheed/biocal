@@ -20,8 +20,10 @@ If the install has been successful then you should be able to import, in your py
 `from biocal import biocal`
 
 
-## Tutorial
-There is a functional example in the jupyter notebook `biocal_tutorial.ipynb`
+## Documentation and tutorial
+The `biocal` function contains full documentation accessed using one of the usual python ways, i.e. `?biocal`
+
+There is a functional tutoral as a jupyter notebook: `biocal_tutorial.ipynb`
 
 ## Licence
 Please consult the licence file in the repo.
