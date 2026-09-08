@@ -20,7 +20,7 @@ If the install has been successful then you should be able to import the package
 `import biocal`
 
 ## License
-The GPL license is permissive but please be reasonable.
+Please consult the license file in the repo.
 
 ## Tutorial
 
