@@ -17,7 +17,7 @@ Install (or upgrade) the package in your python environment using the `pip` term
 
 If the install has been successful then you should be able to import the function from the package:
 
-`import biocal`
+`from biocal import biocal`
 
 
 ## Tutorial
