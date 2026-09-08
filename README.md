@@ -19,8 +19,8 @@ If the install has been successful then you should be able to import the package
 
 `import biocal`
 
-## License
-Please consult the license file in the repo.
+## Licence
+Please consult the licence file in the repo.
 
 ## Tutorial
 
