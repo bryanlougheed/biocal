@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib as plt
 from math import erf
 from numba import jit, prange
 import os
@@ -530,8 +531,6 @@ def biocal_plot(p95_4, p68_2, calprob, medage, yeartype):
 
 ## working example (if __name__ == '__main__': means it only runs when you explicitly run this file, i.e. won't be imported as package)
 if __name__ == '__main__':
-
-	import matplotlib.pyplot as plt
 
 	# make a sine wave for a theoretical, fictional abundance
 	age = np.arange(15000, 25001, 1)
