@@ -216,9 +216,6 @@ def biocal(Adet, sigdet, calcurve, yeartype, sar, bd, brok=0, abu=[], res=[]):
 		the associated probability for that range in Col 3.
 		Probabilities are normalised to between zero and one.
 
-	p95 : ndarray
-		Same as p95, but for 95% calibrated range.
-
 	p68_2 : ndarray
 		Same as p68_2, but for the 68.27% calibrated range.
 
