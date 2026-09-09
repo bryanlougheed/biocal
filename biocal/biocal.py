@@ -1,5 +1,5 @@
 import numpy as np
-import matplotlib as plt
+from matplotlib import pyplot as plt
 from math import erf
 from numba import jit, prange
 import os
